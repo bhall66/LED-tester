@@ -1,6 +1,6 @@
  /**************************************************************************
       Author:   Bruce E. Hall, w8bh.net
-        Date:   19 Sep 2021
+        Date:   04 Oct 2021
     Hardware:   Seeeduino XIAO, 128x64 I2C OLED display, MCP4261
     Software:   Arduino IDE 1.8.13
        Legal:   Copyright (c) 2021  Bruce E. Hall.
@@ -17,7 +17,7 @@
 #include <Adafruit_SSD1306.h>                      // Adafruit OLED library
 #include <RotaryEncoder.h>                         // Matthias Hertel version
 
-#define VOLTAGE_DIVIDER  false                     // if true, using voltage/2 on inputs
+#define VOLTAGE_DIVIDER   true                     // if true, using voltage/2 on inputs
 
 #define ENCODER_A            0                     // Connect encoder to MCU pin D0
 #define ENCODER_B            1                     // Connect encoder to MCU pin D1
@@ -58,7 +58,7 @@ RotaryEncoder  encoder(ENCODER_A, ENCODER_B);      // instantiate encoder object
 //                      |                current through the resistor.
 //                     ///    GND
 //
-// rVal is an array, containing values for the 15 most common LED current-limiting resistors
+// rVal is an array, containing values for 15 common LED current-limiting resistors
 
 const int rVal[] = {220,270,330,390,470,560,680,820,1000,1200,1500,2200,2700,3300,4700};
 
@@ -80,9 +80,9 @@ float getVoltage(int pin) {                        // returns voltage on an inpu
   return (3.3*data)/1023;                          // convert to voltage.
 }
 
-void setResistance (int r) {                       // set pot to a given resistance
+void setResistance (int r) {                       // set pot to given resistance (TERMINAL A to WIPER)
   float pos = (r-R_WIPER-100)/19.53;               // calculate wiper pos, accounting for 100-ohm R
-  setWiper(round(pos));                            // set the wiper position
+  setWiper(256-round(pos));                        // set wiper position. For TERMINAL B, omit "256-".
 }
 
 
@@ -114,15 +114,15 @@ void showResults() {
   float vCC = getVoltage(VCC_PIN);                 // measure the digipot input voltage
   float vHi = getVoltage(VHI_PIN);                 // measure vHi: above 100 ohm resistor
   float vLo = getVoltage(VLO_PIN);                 // measure vLo: below 100 ohm resistor
-  float current = abs(vHi-vLo)*10;                 // calculate I=Vr/R = dV/100(amps) = 10*dV(mA) 
+  float current = abs(vHi-vLo)*10;                 // calculate I=Vr/R = dV/100 = dV*10 (in mA) 
   led.fillRect(60,30,68,34,BLACK);                 // erase previous values
   led.setTextSize(1);
   drawFloat(vCC,90,ROW0); led.write('v');          // display LED testing voltage in small font
   led.setTextSize(2); 
-  if (vLo < 0.1) {                                 // detect short condition
+  if (vLo < 0.1) {                                 // detect "short" condition = no Vf
     drawText("----",60,ROW2);
     drawText("Shrt",60,ROW3);
-  } else if ((vCC-vLo) < 0.2) {                    // detect No LED condition
+  } else if ((vCC-vLo) < 0.2) {                    // detect "No LED" condition = no current
     drawText("-NO-",60,ROW2);
     drawText("LED!",60,ROW3);
   } else {                                         // display voltage and current:
@@ -150,18 +150,42 @@ void initScreen() {
 
 //===============================================  MAIN PROGRAM ============================
 
+void isr() {                                       // Encoder Interrupt Service Routine:
+  encoder.tick();                                  // on interrupt, check encoder state
+}
+
+void initEncoder() {                               // enable encoder interrupts
+  attachInterrupt(digitalPinToInterrupt            // (More responsive than polling)
+    (ENCODER_A), isr, CHANGE);
+  attachInterrupt(digitalPinToInterrupt
+    (ENCODER_B), isr, CHANGE);  
+}
+
+void flashMorseL() {                               // flash LED: dit-dah-dit-dit (Morse "L")
+  const int width[] = {1,3,1,1};                   // relative widths: dah = 3 x dit
+  const int ditLen = 120;                          // code speed = 1200/ditlen = 10 WPM
+  pinMode(LED_BUILTIN,OUTPUT);                     // init LED pin
+  for (int i=0; i<4; i++) {                        // for each of the 4 elements:
+    digitalWrite(LED_BUILTIN,0);                   // turn on LED
+    delay(width[i]*ditLen);                        // keep on for duration of element
+    digitalWrite(LED_BUILTIN,1);                   // and turn off LED
+    delay(ditLen);                                 // for one dit length  
+  }         
+}
+
 void setup()   {              
   SPI.begin();                                     // initialize SPI communication
   pinMode(DIGIPOT_CS,OUTPUT);                      // use D7 as DigiPot chip select
   initScreen();                                    // configure screen for showing data
+  initEncoder();                                   // enable encoder interrupts
   showResistance(1000);                            // start with resistance of 1K
   setResistance(1000);                             // and set pot to this value
+  flashMorseL();                                   // show startup is complete
 }
 
 void loop() { 
   static int i = 8;                                // start w/ rVal[8] = 1000 ohms
   static int timer = millis();                     // initialize 1 second timer
-  encoder.tick();                                  // update the potentiometer
   int dir = (int)encoder.getDirection();           // check the encoder for movement
   if (dir!=0) {                                    // did the encoder move?
     i += dir;                                      // step back or forward

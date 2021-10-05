@@ -82,7 +82,7 @@ void loop() {
   static int oldPos = 0;                           // previous position
   encoder.tick();                                  // keep encoder states current
   int pos = encoder.getPosition();                 // get current encoder position
-  if (pos != oldPos) {                             // hsa encoder moved?
+  if (pos != oldPos) {                             // has encoder moved?
     setResistance(pos*100);                        // set resistance in 100-ohm steps
     oldPos = pos;                                  // and remember it
   }
