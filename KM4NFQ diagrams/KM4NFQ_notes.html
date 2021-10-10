@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>
+
+        </title>
+		<meta charset="utf-8"  />
+    </head>
+    <body bgcolor="white">
+        <center>
+            <table width="70%">
+                <tr>
+                    <td>
+						<p>
+                        <h2>Build Notes for the W8BH LED Tester</h2>
+                        by Ken, KM4NFQ "Not Fully Qualified"
+                        <hr>
+						</p><p>
+                        This is how I laid out my breadboard. The KY-040 Rotary Encoder Module that I used is not shown, but its placement is indicated. Note that there is a 3V3 power rail labeled at the top of the breadboard image, and a 5V power rail labeled at the bottom.
+						</p><p>
+						<img src="led-tester-bb02.png" width=720 height=480>
+                        <hr>
+						</p><p>
+                        I connected the GND, 3V3, and 5V pins to the XIAO. The 3V3 power rail is used by the OLED.
+						<img src="lt-bb-01.png" width=720 height=480>
+                        <hr>
+						</p><p>
+                        Next I connected the OLED to the XIAO and the 3V3 power rail. 
+						<img src="lt-bb-02.png" width=720 height=480>
+						<img src="mini-oled-pinout.png" width=720 height=480>
+                        <hr>
+						</p><p>
+                        I added the MCP4261 digipot and wired it up. The MCP4261 digipot uses the 5V power rail.
+						<img src="lt-bb-03a.png" width=720 height=480>
+						<img src="mcp4261-pinout.png" width=720 height=480>
+                        <hr>
+						</p><p>
+                        The wires for the parallel resistors are connected.
+						<img src="lt-bb-03b.png" width=720 height=480>
+                        <hr>
+						</p><p>
+                        I added my KY-040 Rotary Encoder Module and wired it up. 
+						<img src="lt-bb-04.png" width=720 height=480>
+						<img src="ky-040-pinout.png" width=720 height=480>
+                        <hr>
+						</p><p>
+                        A 100 OHM resistor and a RED LED are added and wired up.
+						<img src="lt-bb-05.png" width=720 height=480>
+                        <hr>
+						</p><p>
+                        XIAO pin 8 (D7) connected to the 3V3 power rail.
+						<img src="lt-bb-06.png" width=720 height=480>
+                        <hr>
+						</p>
+                    </td>
+                </tr>
+            </table>
+        </center>
+    </body>
+</html>
